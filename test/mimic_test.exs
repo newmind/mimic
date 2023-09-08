@@ -580,6 +580,21 @@ defmodule Mimic.Test do
     end
   end
 
+  describe "expect/4 no func" do
+    setup :set_mimic_private
+
+    test "expect to call original function" do
+      Calculator
+      |> expect(:add, 2)
+      |> expect(:mult)
+
+      assert Calculator.add(4, 3) == 7
+      assert Calculator.add(5, 2) == 7
+      assert Calculator.mult(4, 3) == 12
+      verify!()
+    end
+  end
+
   describe "reject/1 private mode" do
     setup :set_mimic_private
 

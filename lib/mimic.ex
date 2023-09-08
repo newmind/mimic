@@ -218,11 +218,19 @@ defmodule Mimic do
       ...> Calculator.add(2, 4)
       8
   """
-  @spec expect(atom, atom, non_neg_integer, function) :: module
-  def expect(module, fn_name, num_calls \\ 1, func)
+  @spec expect(atom, atom, non_neg_integer, function | nil) :: module
+  def expect(module, fn_name, num_calls \\ 1, func \\ nil)
 
   def expect(_module, _fn_name, 0, _func) do
     raise ArgumentError, "Expecting 0 calls should be done through Mimic.reject/1"
+  end
+
+  def expect(module, fn_name, num_calls, nil)
+      when is_atom(module) and is_atom(fn_name) and is_integer(num_calls) and num_calls >= 1 do
+    arity = get_arity(module, fn_name)
+    func = original_call_wrapper(module, fn_name, arity)
+
+    expect(module, fn_name, num_calls, func)
   end
 
   def expect(module, fn_name, num_calls, func)
@@ -510,5 +518,35 @@ defmodule Mimic do
   defp validate_server_response(_, :copy) do
     raise ArgumentError,
           "Failed to copy module.  See docs for Mimic.copy/1"
+  end
+
+  defp get_arity(module, fn_name) do
+    module.__info__(:functions)
+    |> Enum.find(fn {name, _} -> name == fn_name end)
+    |> elem(1)
+  end
+
+  defp original_call_wrapper(module, fn_name, arity) do
+    case arity do
+      1 ->
+        fn a0 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0])
+        end
+
+      2 ->
+        fn a0, a1 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1])
+        end
+
+      3 ->
+        fn a0, a1, a2 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2])
+        end
+
+      4 ->
+        fn a0, a1, a2, a3 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2, a3])
+        end
+    end
   end
 end
