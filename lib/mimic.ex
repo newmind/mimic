@@ -526,8 +526,11 @@ defmodule Mimic do
     |> elem(1)
   end
 
-  defp original_call_wrapper(module, fn_name, arity) do
+  defp original_call_wrapper(module, fn_name, arity) when arity <= 7 do
     case arity do
+      0 ->
+        fn -> Kernel.apply(Mimic.Module.original(module), fn_name, []) end
+
       1 ->
         fn a0 ->
           Kernel.apply(Mimic.Module.original(module), fn_name, [a0])
@@ -546,6 +549,21 @@ defmodule Mimic do
       4 ->
         fn a0, a1, a2, a3 ->
           Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2, a3])
+        end
+
+      5 ->
+        fn a0, a1, a2, a3, a4 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2, a3, a4])
+        end
+
+      6 ->
+        fn a0, a1, a2, a3, a4, a5 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2, a3, a4, a5])
+        end
+
+      7 ->
+        fn a0, a1, a2, a3, a4, a5, a6 ->
+          Kernel.apply(Mimic.Module.original(module), fn_name, [a0, a1, a2, a3, a4, a5, a6])
         end
     end
   end
